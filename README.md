@@ -35,13 +35,13 @@ nugget-extractor-prompt.txt ← THE EDITOR: how to mine a transcript into nugget
 Two endpoints:
 
 - `POST /webhook/assistant-request` — returns the interviewer config (system prompt lives server-side, read from `interviewer-prompt.txt`)
-- `POST /extract-nuggets` — takes `{ transcript: [{role, text}] }`, runs the editor prompt via the OpenAI API, returns `{ read, nuggets: [...] }`
+- `POST /extract-nuggets` — takes `{ transcript: [{role, text}] }`, runs the editor prompt via your **GLM** endpoint (OpenAI-compatible), returns `{ read, nuggets: [...] }`
 
 ## Prerequisites
 
 - Node.js **v18+**
 - A [Vapi](https://vapi.ai) account (public key)
-- An [OpenAI](https://platform.openai.com) API key (used server-side for nugget extraction)
+- A **GLM** API key (Zhipu / OpenRouter / SiliconFlow — any OpenAI-compatible endpoint; used server-side for nugget extraction)
 
 ## Installation
 
@@ -49,16 +49,27 @@ Two endpoints:
 git clone https://github.com/ianpilon/saymore-voice-agent.git
 cd saymore-voice-agent
 npm install
-cp .env.example .env      # then add your OPENAI_API_KEY
+cp .env.example .env      # then paste your GLM key into .env
 ```
 
 ## Configuration
 
-### 1. The server (`.env`)
+### 1. The server (`.env`) — your keys file
+
+Open `.env` and paste your keys. It's gitignored, so secrets stay local.
 
 ```bash
 PORT=3000
-OPENAI_API_KEY=sk-...     # required — runs the nugget extractor, server-side only
+
+# GLM (your LLM) — runs the nugget extractor, server-side only
+GLM_API_KEY=your-glm-key
+GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4/   # Zhipu direct (or openrouter / siliconflow)
+GLM_MODEL=glm-5.2                                    # exact string your provider expects
+
+# Live interviewer model — runs INSIDE Vapi during the call.
+# Leave the defaults; set them once you've told me your GLM gateway.
+VAPI_MODEL_PROVIDER=openai
+VAPI_MODEL=gpt-4o
 ```
 
 ### 2. The landing page (`docs/index.html`)
@@ -75,7 +86,7 @@ const EXTRACT_NUGGETS_API = "https://your-deployed-backend.example.com/extract-n
 
 - **The interview:** edit `interviewer-prompt.txt`
 - **The nuggets:** edit `nugget-extractor-prompt.txt`
-- **The voice / model:** in `server.js` (`voice.voiceId`, `INTERVIEWER_MODEL`, `EXTRACTOR_MODEL`)
+- **The voice / GLM model / base URL:** in `.env` (`GLM_MODEL`, `GLM_BASE_URL`) and `server.js` (`voice.voiceId`)
 
 ## Running
 
@@ -101,7 +112,7 @@ Host `docs/index.html` anywhere static (GitHub Pages, Netlify, Vercel…) — ju
 
 ## Deployment
 
-`Dockerfile` and `render.yaml` are included for one-click deploys (Render, Fly, Railway, any container host). Set `OPENAI_API_KEY` as an environment variable on your host.
+`Dockerfile` and `render.yaml` are included for one-click deploys (Render, Fly, Railway, any container host). Set `GLM_API_KEY` (and optionally `GLM_BASE_URL`, `GLM_MODEL`) as environment variables on your host.
 
 ## File Structure
 

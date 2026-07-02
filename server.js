@@ -3,7 +3,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-const OpenAI = require('openai').default;
+const OpenAI = require('openai').default; // GLM exposes an OpenAI-compatible API, so we reuse this SDK
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -37,24 +37,35 @@ const EXTRACTOR_PROMPT = fs.readFileSync(
 );
 
 // ============================================================
-// OpenAI client (server-side only — key never reaches the browser)
+// GLM client (server-side only — key never reaches the browser)
+// GLM is OpenAI-compatible, so we point the OpenAI SDK at your
+// provider's base URL. Works with Zhipu, OpenRouter, SiliconFlow, etc.
 // ============================================================
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+function isPlaceholder(v) {
+  return !v || /paste|replace|your[-_]|xxx|example|sk-replace/i.test(v);
+}
 
-const INTERVIEWER_MODEL = process.env.INTERVIEWER_MODEL || 'gpt-4o';
-const EXTRACTOR_MODEL = process.env.EXTRACTOR_MODEL || 'gpt-4o';
+const GLM_API_KEY  = process.env.GLM_API_KEY;
+const GLM_BASE_URL = process.env.GLM_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4/';
+const GLM_MODEL    = process.env.GLM_MODEL || 'glm-5.2';
 
-// The interviewer's opening line. Kept clean of any downstream "content"
-// framing — it's just a warm conversation opener with a few doors.
+const llm = isPlaceholder(GLM_API_KEY)
+  ? null
+  : new OpenAI({ apiKey: GLM_API_KEY, baseURL: GLM_BASE_URL });
+
+// ── Live interviewer model (runs INSIDE Vapi during the call) ──
+// Vapi must support the provider you set here. Defaults kept inert so the
+// server still boots. Tell me your GLM gateway and I'll set this correctly
+// (e.g. provider "openrouter", or a custom proxy for Zhipu direct).
+const VAPI_MODEL_PROVIDER = process.env.VAPI_MODEL_PROVIDER || 'openai';
+const VAPI_MODEL          = process.env.VAPI_MODEL || 'gpt-4o';
+
+// The interviewer's opening line. Clean of any downstream "content" framing.
 const FIRST_MESSAGE =
   "Hey, good to talk to you. Think of this as a casual interview — I'll just ask questions and follow whatever's interesting. There's no wrong place to start. So, what's on your mind today? Could be something you figured out recently, someone who impressed you, or an opinion you've been chewing on. Where do you want to start?";
 
 // ============================================================
 // 1) Assistant config (transient assistant pattern, web-only)
-//    The browser POSTs here, gets the interviewer config back, and
-//    starts the Vapi Web call with it.
 // ============================================================
 app.post('/webhook/assistant-request', (req, res) => {
   console.log('🔍 assistant-request payload:', JSON.stringify(req.body, null, 2));
@@ -63,8 +74,8 @@ app.post('/webhook/assistant-request', (req, res) => {
     name: 'Saymore Interviewer',
     firstMessage: FIRST_MESSAGE,
     model: {
-      provider: 'openai',
-      model: INTERVIEWER_MODEL,
+      provider: VAPI_MODEL_PROVIDER,
+      model: VAPI_MODEL,
       temperature: 0.8,
       messages: [{ role: 'system', content: INTERVIEWER_PROMPT }],
     },
@@ -90,10 +101,52 @@ app.post('/webhook/assistant-request', (req, res) => {
 });
 
 // ============================================================
-// 2) Nugget extraction — runs AFTER the call, over the transcript
-//    The browser sends the captured transcript; we run the editor
-//    prompt via OpenAI and return structured nuggets.
+// 2) Nugget extraction — runs AFTER the call, over the transcript,
+//    via your GLM endpoint.
 // ============================================================
+async function callExtractor(transcriptText) {
+  const baseMessages = [
+    { role: 'system', content: EXTRACTOR_PROMPT },
+    {
+      role: 'user',
+      content:
+        'Here is the raw interview transcript. Mine it for nuggets per the rules.\n\n' +
+        '=== TRANSCRIPT ===\n' +
+        transcriptText,
+    },
+  ];
+
+  let raw;
+  // Prefer structured JSON mode; fall back to plain text if this GLM
+  // variant or gateway doesn't support response_format.
+  try {
+    const c = await llm.chat.completions.create({
+      model: GLM_MODEL,
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
+      messages: baseMessages,
+    });
+    raw = c.choices[0].message.content;
+  } catch (err) {
+    console.warn('⚠️  JSON mode unavailable, retrying plain text:', err.message);
+    const c = await llm.chat.completions.create({
+      model: GLM_MODEL,
+      temperature: 0.4,
+      messages: baseMessages,
+    });
+    raw = (c.choices[0].message.content || '')
+      .replace(/^```(?:json)?/i, '')
+      .replace(/```$/i, '')
+      .trim();
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return { read: 'The extractor returned unexpected output.', _raw: raw };
+  }
+}
+
 app.post('/extract-nuggets', async (req, res) => {
   const transcript = req.body && req.body.transcript;
 
@@ -102,10 +155,10 @@ app.post('/extract-nuggets', async (req, res) => {
       .status(400)
       .json({ error: 'Missing "transcript" (array of {role, text}).' });
   }
-  if (!openai) {
+  if (!llm) {
     return res
       .status(500)
-      .json({ error: 'OPENAI_API_KEY is not set on the server.' });
+      .json({ error: 'GLM_API_KEY is not set on the server (see .env).' });
   }
 
   const lines = transcript
@@ -117,34 +170,10 @@ app.post('/extract-nuggets', async (req, res) => {
     return res.status(400).json({ error: 'Transcript had no speakable lines.' });
   }
 
-  console.log(`⛏️  Extracting nuggets from ${transcript.length} lines…`);
+  console.log(`⛏️  Extracting nuggets from ${transcript.length} lines via ${GLM_MODEL}…`);
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: EXTRACTOR_MODEL,
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: EXTRACTOR_PROMPT },
-        {
-          role: 'user',
-          content:
-            'Here is the raw interview transcript. Mine it for nuggets per the rules.\n\n' +
-            '=== TRANSCRIPT ===\n' +
-            lines,
-        },
-      ],
-    });
-
-    const raw = completion.choices[0].message.content;
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      console.warn('⚠️  Extractor did not return valid JSON; returning raw.');
-      return res.json({ read: 'The extractor returned unexpected output.', _raw: raw });
-    }
-
+    const parsed = await callExtractor(lines);
     console.log(`✅ Extracted ${(parsed.nuggets || []).length} nugget(s).`);
     return res.json(parsed);
   } catch (err) {
@@ -168,12 +197,13 @@ code{background:#f3f3f3;padding:2px 6px;border-radius:4px}
 <body>
 <h1>Saymore</h1>
 <p class="ok">Server is running on port ${port}.</p>
-<p class="meta">Interviewer model: <strong>${INTERVIEWER_MODEL}</strong> · Extractor model: <strong>${EXTRACTOR_MODEL}</strong></p>
-<p class="meta">OpenAI: ${openai ? 'configured' : '⚠️ not configured (set OPENAI_API_KEY)'}</p>
+<p class="meta">Extractor: <strong>${GLM_MODEL}</strong> @ ${GLM_BASE_URL}</p>
+<p class="meta">Live interviewer (Vapi): <strong>${VAPI_MODEL_PROVIDER}/${VAPI_MODEL}</strong></p>
+<p class="meta">GLM client: ${llm ? 'configured' : '⚠️ not configured (set GLM_API_KEY in .env)'}</p>
 <h3>Endpoints</h3>
 <ul>
   <li><code>POST /webhook/assistant-request</code> — returns the interviewer config (called by the browser)</li>
-  <li><code>POST /extract-nuggets</code> — runs the editor over a transcript, returns nuggets</li>
+  <li><code>POST /extract-nuggets</code> — runs the editor over a transcript via GLM, returns nuggets</li>
   <li><a href="/healthz">GET /healthz</a> — keep-alive ping target</li>
 </ul>
 <p class="meta">Helping you share your voice.</p>
@@ -181,7 +211,7 @@ code{background:#f3f3f3;padding:2px 6px;border-radius:4px}
 });
 
 app.get('/healthz', (req, res) =>
-  res.json({ ok: true, openai: !!openai })
+  res.json({ ok: true, glm: !!llm, model: GLM_MODEL })
 );
 
 // ============================================================
@@ -191,9 +221,9 @@ app.listen(port, () => {
   console.log('\n🎙️  Saymore Server');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`📍 Server:        http://localhost:${port}`);
-  console.log(`🗣️  Interviewer:   ${INTERVIEWER_MODEL}`);
-  console.log(`⛏️  Extractor:     ${EXTRACTOR_MODEL}`);
-  console.log(`🔑 OpenAI:        ${openai ? 'configured' : '⚠️  NOT configured (set OPENAI_API_KEY)'}`);
+  console.log(`⛏️  Extractor:     ${GLM_MODEL} @ ${GLM_BASE_URL}`);
+  console.log(`🗣️  Live (Vapi):   ${VAPI_MODEL_PROVIDER}/${VAPI_MODEL}`);
+  console.log(`🔑 GLM:           ${llm ? 'configured' : '⚠️  NOT configured (set GLM_API_KEY in .env)'}`);
   console.log(`🎯 Assistant cfg: POST /webhook/assistant-request`);
   console.log(`✨ Nuggets:       POST /extract-nuggets`);
   console.log(`❤️  Health:       GET /healthz`);
