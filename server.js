@@ -57,8 +57,11 @@ const llm = isPlaceholder(GLM_API_KEY)
 // Vapi must support the provider you set here. Defaults kept inert so the
 // server still boots. Tell me your GLM gateway and I'll set this correctly
 // (e.g. provider "openrouter", or a custom proxy for Zhipu direct).
-const VAPI_MODEL_PROVIDER = process.env.VAPI_MODEL_PROVIDER || 'openai';
-const VAPI_MODEL          = process.env.VAPI_MODEL || 'gpt-4o';
+// Live interviewer runs natively inside Vapi (works with just your Vapi key,
+// like Untangle). Gemini chosen since you're off OpenAI. Tune the exact model
+// string in .env (VAPI_MODEL) if your Vapi account expects a different one.
+const VAPI_MODEL_PROVIDER = process.env.VAPI_MODEL_PROVIDER || 'google';
+const VAPI_MODEL          = process.env.VAPI_MODEL || 'gemini-2.0-flash';
 
 // The interviewer's opening line. Clean of any downstream "content" framing.
 const FIRST_MESSAGE =
