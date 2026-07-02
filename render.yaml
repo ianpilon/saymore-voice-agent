@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: saymore-voice-agent
+    runtime: node
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false   # set this in the Render dashboard
+      - key: NODE_VERSION
+        value: 20.0.0

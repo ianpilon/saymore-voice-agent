@@ -1,0 +1,30 @@
+{
+  "name": "saymore-voice-agent",
+  "version": "1.0.0",
+  "description": "Voice agent that interviews you like a great podcast host, then mines the transcript into post-ready nuggets. Helping you share your voice.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-webhook.js"
+  },
+  "keywords": [
+    "vapi",
+    "voice-ai",
+    "linkedin",
+    "content",
+    "interview",
+    "nuggets",
+    "webhook"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "openai": "^4.67.1"
+  }
+}
