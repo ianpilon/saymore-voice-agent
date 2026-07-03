@@ -2,6 +2,10 @@
 
 A voice agent that interviews you like a great podcast host — warm, curious, one question at a time — then mines the transcript for the raw, post-worthy **nuggets** worth turning into a LinkedIn post. Built on [Vapi](https://vapi.ai). **Helping you share your voice.**
 
+![Saymore](docs/screenshot.png)
+
+**Live:** https://saymore.voiceclaw.ca
+
 ## The idea
 
 Your best ideas come out when you talk, not when you stare at a blank page. Saymore is a two-stage pipeline:
