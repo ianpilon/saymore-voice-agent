@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "test": "node test-webhook.js"
+    "test": "node test-webhook.js",
+    "build:sdk": "esbuild node_modules/@vapi-ai/web/dist/vapi.js --bundle --format=iife --global-name=Vapi --outfile=docs/vapi.js"
   },
   "keywords": [
     "vapi",
@@ -26,5 +27,9 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "openai": "^4.67.1"
+  },
+  "devDependencies": {
+    "@vapi-ai/web": "2.3.8",
+    "esbuild": "0.28.1"
   }
 }

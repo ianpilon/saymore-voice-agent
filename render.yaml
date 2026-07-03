@@ -6,10 +6,16 @@ services:
     healthCheckPath: /healthz
     envVars:
       - key: GLM_API_KEY
-        sync: false   # set this in the Render dashboard
+        sync: false   # set in the Render dashboard (your GLM/Zhipu key)
+      - key: VAPI_PUBLIC_KEY
+        sync: false   # set in the Render dashboard (Vapi public key)
       - key: GLM_BASE_URL
         value: https://open.bigmodel.cn/api/paas/v4/
       - key: GLM_MODEL
         value: glm-5.2
+      - key: VAPI_MODEL_PROVIDER
+        value: google
+      - key: VAPI_MODEL
+        value: gemini-2.0-flash
       - key: NODE_VERSION
         value: 20.0.0

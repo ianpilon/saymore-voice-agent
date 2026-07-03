@@ -295,7 +295,7 @@
             Download report (.md)
           </button>
           <button type="button" class="btn btn-outline" id="download-transcript">Download transcript (.txt)</button>
-          <button type="button" class="btn btn-outline" data-call-btn data-idle-label="Start another">Start another</button>
+          <button type="button" class="btn btn-outline" data-call-btn data-idle-label="Start another"><span data-call-label>Start another</span></button>
         </div>
       </div>
     </div>
@@ -445,24 +445,35 @@
   </script>
 
   <script>
-    // Safety net: if the voice SDK never loads, tell the user.
+    // Live status + safety net: if the voice SDK never loads, tell the user.
     window.__sdkReady = false;
+    (function () {
+      var s = document.querySelector('[data-call-status]');
+      if (s) s.textContent = 'Loading voice SDK…';
+    })();
     window.__sdkTimer = setTimeout(function () {
       if (window.__sdkReady) return;
       var s = document.querySelector('[data-call-status]');
-      if (s) s.textContent = 'Voice service is still loading. If this persists, refresh the page.';
-    }, 8000);
+      if (s) s.textContent = 'Voice SDK still not loaded — check your connection, then refresh.';
+    }, 12000);
   </script>
 
   <script type="module">
-    import Vapi from "https://esm.sh/@vapi-ai/web@2.3.8";
+    let VapiCtor = null;  // the Vapi SDK constructor, loaded dynamically below
 
-    // ──────────────────────────────────────────────────────────────
-    // CONFIG — update these for your own Saymore deployment
-    // ──────────────────────────────────────────────────────────────
-    const VAPI_PUBLIC_KEY    = "YOUR_VAPI_PUBLIC_KEY";                                              // TODO
-    const ASSISTANT_API      = "https://YOUR-SAYMORE-BACKEND.example.com/webhook/assistant-request?web=1"; // TODO
-    const EXTRACT_NUGGETS_API = "https://YOUR-SAYMORE-BACKEND.example.com/extract-nuggets";                // TODO
+    // ──────────────────────────────────────────────────────────
+    // CONFIG
+    // When this page is served by the Saymore server (local or deployed),
+    // config is injected automatically as window.__SAYMORE_CONFIG__ — no
+    // edits needed. The fallback below is only used if you host this file
+    // somewhere static (e.g. GitHub Pages) without the server.
+    // ──────────────────────────────────────────────────────────
+    const CFG = window.__SAYMORE_CONFIG__ || {
+      VAPI_PUBLIC_KEY: "YOUR_VAPI_PUBLIC_KEY",
+      ASSISTANT_API: "https://YOUR-SAYMORE-BACKEND.example.com/webhook/assistant-request?web=1",
+      EXTRACT_NUGGETS_API: "https://YOUR-SAYMORE-BACKEND.example.com/extract-nuggets",
+    };
+    const { VAPI_PUBLIC_KEY, ASSISTANT_API, EXTRACT_NUGGETS_API } = CFG;
 
     const HERO_STATUS_DEFAULT = "Live conversation right here in your browser";
 
@@ -485,6 +496,7 @@
       state = next;
       buttons.forEach(btn => {
         const label = btn.querySelector('[data-call-label]');
+        if (!label) return;
         const idle = btn.dataset.idleLabel || 'Start talking';
         if (state === 'connecting') label.textContent = 'Connecting…';
         else if (state === 'active') label.textContent = 'End call';
@@ -500,7 +512,7 @@
 
     function ensureVapi() {
       if (vapi) return vapi;
-      vapi = new Vapi(VAPI_PUBLIC_KEY);
+      vapi = new VapiCtor(VAPI_PUBLIC_KEY);
       vapi.on('call-start', () => {
         transcript = [];
         workspace.hidden = true;       // hide any previous report
@@ -664,11 +676,43 @@
       });
     });
 
-    // SDK loaded — enable buttons
-    window.__sdkReady = true;
-    clearTimeout(window.__sdkTimer);
-    setState('idle');
-    document.body.classList.add('sdk-ready');
+    // Load the locally-bundled Vapi SDK (no external CDN — works behind blocked networks).
+    function setStatus(m){ if (heroStatus) heroStatus.textContent = m; }
+    function loadScript(src){
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src; s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('failed to load ' + src));
+        document.head.appendChild(s);
+      });
+    }
+    (async () => {
+      setStatus('Loading voice SDK…');
+      try {
+        await loadScript('/vapi.js');
+        const g = window.Vapi;
+        VapiCtor = g && (g.default || g);
+      } catch (e) {
+        clearTimeout(window.__sdkTimer);
+        setStatus('⚠️ Voice SDK failed to load — ' + (e && e.message ? e.message : e) + '.');
+        return;
+      }
+      if (typeof VapiCtor !== 'function') {
+        clearTimeout(window.__sdkTimer);
+        setStatus('⚠️ Voice SDK loaded but Vapi is not a function.');
+        return;
+      }
+      if (!VAPI_PUBLIC_KEY || VAPI_PUBLIC_KEY === 'YOUR_VAPI_PUBLIC_KEY') {
+        clearTimeout(window.__sdkTimer);
+        setStatus('⚠️ Vapi key not reaching the page (got: ' + (VAPI_PUBLIC_KEY ? VAPI_PUBLIC_KEY.slice(0, 8) + '…' : 'empty') + ').');
+        return;
+      }
+      window.__sdkReady = true;
+      clearTimeout(window.__sdkTimer);
+      setState('idle');
+      document.body.classList.add('sdk-ready');
+    })();
   </script>
 
 </body>

@@ -63,6 +63,11 @@ const llm = isPlaceholder(GLM_API_KEY)
 const VAPI_MODEL_PROVIDER = process.env.VAPI_MODEL_PROVIDER || 'google';
 const VAPI_MODEL          = process.env.VAPI_MODEL || 'gemini-2.0-flash';
 
+// Vapi public key (browser-side). Injected into the landing page when the
+// server serves it, so you never edit the page's CONFIG by hand.
+// Get it from the Vapi dashboard.
+const VAPI_PUBLIC_KEY = isPlaceholder(process.env.VAPI_PUBLIC_KEY) ? '' : process.env.VAPI_PUBLIC_KEY;
+
 // The interviewer's opening line. Clean of any downstream "content" framing.
 const FIRST_MESSAGE =
   "Hey, good to talk to you. Think of this as a casual interview — I'll just ask questions and follow whatever's interesting. There's no wrong place to start. So, what's on your mind today? Could be something you figured out recently, someone who impressed you, or an opinion you've been chewing on. Where do you want to start?";
@@ -188,26 +193,59 @@ app.post('/extract-nuggets', async (req, res) => {
 });
 
 // ============================================================
-// Status + health
+// Serve the app + status + health
 // ============================================================
+const DOCS_DIR = path.join(__dirname, 'docs');
+
+function getOrigin(req) {
+  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  return `${proto}://${host}`;
+}
+
+// Serve the landing page at the root. Config (public key + this origin's
+// URLs) is injected, so local AND deployed both work with zero page edits.
 app.get('/', (req, res) => {
+  const origin = getOrigin(req);
+  let html;
+  try {
+    html = fs.readFileSync(path.join(DOCS_DIR, 'index.html'), 'utf8');
+  } catch (e) {
+    return res.status(500).send('docs/index.html not found');
+  }
+  const config = `<script>window.__SAYMORE_CONFIG__=${JSON.stringify({
+    VAPI_PUBLIC_KEY: VAPI_PUBLIC_KEY,
+    ASSISTANT_API: `${origin}/webhook/assistant-request?web=1`,
+    EXTRACT_NUGGETS_API: `${origin}/extract-nuggets`,
+  })};</script>`;
+  res.set('Cache-Control', 'no-store'); // never cache — config is injected per request
+  res.type('html').send(html.replace('</head>', config + '</head>'));
+});
+
+// Serve locally-bundled static assets (e.g. /vapi.js) so the page has zero
+// external-CDN dependency — works behind networks that block esm.sh.
+app.use(express.static(DOCS_DIR));
+
+app.get('/status', (req, res) => {
   res.type('html').send(`<!doctype html>
-<html><head><title>Saymore</title>
+<html><head><title>Saymore — status</title>
 <style>body{font-family:system-ui;max-width:640px;margin:40px auto;padding:0 20px;color:#222}
 code{background:#f3f3f3;padding:2px 6px;border-radius:4px}
 .ok{color:#0a7d2e;font-weight:600}
+.bad{color:#b00;font-weight:600}
 .meta{color:#666;font-size:14px}</style></head>
 <body>
 <h1>Saymore</h1>
 <p class="ok">Server is running on port ${port}.</p>
-<p class="meta">Extractor: <strong>${GLM_MODEL}</strong> @ ${GLM_BASE_URL}</p>
+<p class="meta">Extractor: <strong>${GLM_MODEL}</strong> @ ${GLM_BASE_URL} — ${llm ? '<span class=ok>configured</span>' : '<span class=bad>set GLM_API_KEY in .env</span>'}</p>
 <p class="meta">Live interviewer (Vapi): <strong>${VAPI_MODEL_PROVIDER}/${VAPI_MODEL}</strong></p>
-<p class="meta">GLM client: ${llm ? 'configured' : '⚠️ not configured (set GLM_API_KEY in .env)'}</p>
+<p class="meta">Vapi public key: ${VAPI_PUBLIC_KEY ? '<span class=ok>set</span>' : '<span class=bad>set VAPI_PUBLIC_KEY in .env</span>'}</p>
 <h3>Endpoints</h3>
 <ul>
-  <li><code>POST /webhook/assistant-request</code> — returns the interviewer config (called by the browser)</li>
-  <li><code>POST /extract-nuggets</code> — runs the editor over a transcript via GLM, returns nuggets</li>
-  <li><a href="/healthz">GET /healthz</a> — keep-alive ping target</li>
+  <li><a href="/"><strong>GET /</strong></a> — the app (landing page + voice UI)</li>
+  <li><code>POST /webhook/assistant-request</code> — interviewer config</li>
+  <li><code>POST /extract-nuggets</code> — runs the editor over a transcript via GLM</li>
+  <li><a href="/healthz">GET /healthz</a> — health</li>
 </ul>
 <p class="meta">Helping you share your voice.</p>
 </body></html>`);
