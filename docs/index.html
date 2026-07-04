@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Saymore — Talk it out. Get the gold.</title>
-  <meta name="description" content="Saymore is a voice agent that interviews you like a great podcast host, then mines the conversation for the raw, post-worthy nuggets. Your best ideas come out when you talk. Helping you share your voice.">
+  <meta name="description" content="Saymore is a voice agent that interviews you like a great podcast host, then hands back finished LinkedIn posts written in your own voice. Your best ideas come out when you talk. Helping you share your voice.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -138,35 +138,29 @@
     .mining p { color: var(--whisper); font-size: 15px; }
 
     .read-callout { background: var(--gold-soft); border: 1px solid var(--ink); border-radius: 10px;
-      padding: 16px 20px; margin-bottom: 28px; font-size: 17px; font-weight: 500; }
+      padding: 16px 20px; margin-bottom: 28px; font-size: 16px; font-weight: 500; }
     .read-callout .kicker { display: block; margin-bottom: 4px; }
+    .read-callout .menu-text { font-family: var(--font-mono); font-size: 13.5px; white-space: pre-wrap; font-weight: 400; color: var(--ink-soft); line-height: 1.6; }
 
-    .nugget-card { border: 1px solid var(--mist); border-radius: 12px; padding: 24px 26px; margin-bottom: 18px;
+    .post-card { border: 1px solid var(--mist); border-radius: 12px; padding: 24px 26px; margin-bottom: 18px;
       background: var(--paper); position: relative; overflow: hidden; }
-    .nugget-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
-    .nugget-card.cat-Learning::before { background: var(--cat-learning); }
-    .nugget-card.cat-Shout-out::before { background: var(--cat-shoutout); }
-    .nugget-card.cat-Hot-take::before { background: var(--cat-hottake); }
-    .nugget-card.cat-Story::before { background: var(--cat-story); }
-
-    .chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono);
-      font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--ink); margin-bottom: 12px; }
-    .chip.cat-Learning { background: var(--cat-learning); }
-    .chip.cat-Shout-out { background: var(--cat-shoutout); }
-    .chip.cat-Hot-take { background: var(--cat-hottake); color: #fff; border-color: var(--cat-hottake); }
-    .chip.cat-Story { background: var(--cat-story); }
-
-    .nugget-card h4 { font-family: var(--font-display); font-weight: 700; font-size: 21px;
-      line-height: 1.25; margin-bottom: 8px; }
-    .why { font-size: 14px; color: var(--whisper); margin-bottom: 14px; }
-    .why strong { color: var(--ink-soft); font-weight: 600; }
-    .quotes { list-style: none; margin: 0 0 14px; }
-    .quotes li { border-left: 3px solid var(--gold); padding: 2px 0 2px 14px; margin-bottom: 8px;
-      font-size: 15.5px; color: var(--ink); line-height: 1.5; }
-    .specifics { font-size: 13.5px; color: var(--whisper); border-top: 1px dashed var(--mist); padding-top: 10px; }
-    .specifics strong { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
-      text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 2px; }
+    .post-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--gold); }
+    .post-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .post-card h4 { font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1.25; }
+    .post-card .wordcount { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--whisper); flex: none; }
+    .post-hook { font-style: italic; color: var(--ink-soft); font-size: 15px; margin-bottom: 12px; }
+    .post-body { font-size: 16px; line-height: 1.65; color: var(--ink); white-space: pre-wrap; }
+    .post-actions { display: flex; gap: 10px; margin-top: 14px; }
+    .copy-btn { font-family: var(--font-body); font-weight: 600; font-size: 13px; cursor: pointer;
+      background: var(--ink); color: var(--paper); border: 1px solid var(--ink); border-radius: 6px; padding: 7px 14px;
+      transition: background 0.15s ease; }
+    .copy-btn:hover { background: #000; }
+    .copy-btn.copied { background: var(--cat-shoutout); border-color: var(--cat-shoutout); color: var(--ink); }
+    .needs { margin-top: 12px; font-size: 13.5px; color: #8a6d1f; background: #fdf3d8; border: 1px dashed #d8b53a;
+      border-radius: 8px; padding: 10px 14px; }
+    .needs strong { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+      color: #6b5316; display: block; margin-bottom: 4px; }
 
     .result-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; align-items: center; }
     .thin { text-align: center; color: var(--whisper); font-size: 16px; padding: 12px 0; }
@@ -262,10 +256,10 @@
       <div class="hero-inner reveal">
         <p class="badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-          Voice in. Nuggets out.
+          Voice in. Posts out.
         </p>
         <h1>Your best ideas<br>come out<br>when you <span class="hl">talk</span>.</h1>
-        <p class="hero-lead">Saymore is a voice agent that interviews you like a great podcast host &mdash; then mines the whole conversation for the raw, post-worthy gold. No blank page. No performing. Just talk, and walk away with nuggets.</p>
+        <p class="hero-lead">Saymore is a voice agent that interviews you like a great podcast host &mdash; then hands back finished LinkedIn posts written in your own voice, built around the real work you actually did. No blank page. No performing. Just talk, and walk away with posts you can publish.</p>
         <a href="#" class="btn btn-primary" data-call-btn data-idle-label="Start talking">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           <span data-call-label>Start talking</span>
@@ -275,24 +269,24 @@
     </div>
   </section>
 
-  <!-- Workspace appears after a call: mining spinner, then the nuggets report -->
+  <!-- Workspace appears after a call: writing spinner, then the finished posts -->
   <section class="wrap" style="padding-top:0;">
     <div id="workspace" hidden>
       <div class="panel mining" id="mining">
         <div class="pan"><i></i><i></i><i></i></div>
-        <h3>Mining the gold from your conversation&hellip;</h3>
-        <p>Reading every line for the turning points, the surprise, and the lines you&rsquo;d never write down.</p>
+        <h3>Writing your posts&hellip;</h3>
+        <p>Finding the real moments in what you said and shaping them into posts in your voice.</p>
       </div>
       <div class="panel" id="results" hidden>
         <div class="read-callout">
-          <span class="kicker">The read</span>
-          <span id="read-line">&nbsp;</span>
+          <span class="kicker">Story menu</span>
+          <span class="menu-text" id="menu-line">&nbsp;</span>
         </div>
-        <div id="nugget-cards"></div>
+        <div id="post-cards"></div>
         <div class="result-actions">
           <button type="button" class="btn btn-soft" id="download-md">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download report (.md)
+            Download posts (.md)
           </button>
           <button type="button" class="btn btn-outline" id="download-transcript">Download transcript (.txt)</button>
           <button type="button" class="btn btn-outline" data-call-btn data-idle-label="Start another"><span data-call-label>Start another</span></button>
@@ -315,13 +309,13 @@
         </div>
         <div class="step s2 reveal">
           <div class="step-num">02</div>
-          <h3>We pull the gold</h3>
-          <p>The second you hang up, Saymore mines the whole transcript for the moments worth keeping: the turning points, the surprise, the real opinions, the verbatim lines you&rsquo;d never think to write down.</p>
+          <h3>We find the stories</h3>
+          <p>The second you hang up, Saymore reads the whole transcript for the moments worth a post &mdash; the decisions, the mistakes, the turning points with real stakes &mdash; the actual work you tend to under-share.</p>
         </div>
         <div class="step s3 reveal">
           <div class="step-num">03</div>
-          <h3>Get your nuggets</h3>
-          <p>You get a ranked report of post-worthy nuggets &mdash; each with a hook, why it works, verbatim quotes, and the specifics to build with. Download it and turn it into something real.</p>
+          <h3>Get your posts</h3>
+          <p>You get finished LinkedIn posts written in your own voice &mdash; built around a real moment, stripped of AI-speak, ready to copy and publish without overthinking.</p>
         </div>
       </div>
     </div>
@@ -331,42 +325,35 @@
     <div class="wrap">
       <div class="sec-head reveal">
         <span class="kicker">What you get back</span>
-        <h2>Four kinds of nugget.<br>Always your <span class="hl">real words</span>.</h2>
+        <h2>Finished posts. In your voice.<br>Ready to <span class="hl">publish</span>.</h2>
       </div>
       <div class="cats">
         <div class="cat reveal">
-          <span class="cat-dot learning">L</span>
+          <span class="cat-dot learning">1</span>
           <div class="cat-body">
-            <h4>Learning</h4>
-            <p>Something you figured out. A lesson. The &ldquo;it finally clicked.&rdquo;</p>
+            <h4>Built around a real moment</h4>
+            <p>Each post hangs on something that actually happened: a decision, a mistake, a turning point with stakes. Not advice &mdash; a story.</p>
           </div>
         </div>
         <div class="cat reveal">
-          <span class="cat-dot shoutout">S</span>
+          <span class="cat-dot shoutout">2</span>
           <div class="cat-body">
-            <h4>Shout-out</h4>
-            <p>Genuine gratitude or admiration for a real person.</p>
+            <h4>Sounds like you, not AI</h4>
+            <p>Stripped of &ldquo;delve,&rdquo; &ldquo;leverage,&rdquo; forced questions, and engagement bait. Your real words and rhythm are kept where they were vivid.</p>
           </div>
         </div>
         <div class="cat reveal">
-          <span class="cat-dot hottake">H</span>
+          <span class="cat-dot hottake">3</span>
           <div class="cat-body">
-            <h4>Hot take</h4>
-            <p>A real, defensible opinion &mdash; especially a contrarian one.</p>
+            <h4>Copy and publish</h4>
+            <p>Each post is a finished draft, 120&ndash;220 words. One click to copy it into LinkedIn. Tweak if you want &mdash; or just post.</p>
           </div>
         </div>
         <div class="cat reveal">
-          <span class="cat-dot story">St</span>
+          <span class="cat-dot story">4</span>
           <div class="cat-body">
-            <h4>Story</h4>
-            <p>A specific thing that happened, with a clear arc.</p>
-          </div>
-        </div>
-        <div class="cat synthesis reveal">
-          <span class="cat-dot learning">&ldquo;&rdquo;</span>
-          <div class="cat-body">
-            <h4>Verbatim quotes, every time</h4>
-            <p>The raw material is your real words, pulled exactly as you said them. That&rsquo;s the gold a writer builds from &mdash; never cleaned up, never invented.</p>
+            <h4>Nothing invented</h4>
+            <p>If a detail would strengthen a post but isn&rsquo;t in what you said, it&rsquo;s flagged for you &mdash; never made up. Your work stays your work.</p>
           </div>
         </div>
       </div>
@@ -471,24 +458,24 @@
     const CFG = window.__SAYMORE_CONFIG__ || {
       VAPI_PUBLIC_KEY: "YOUR_VAPI_PUBLIC_KEY",
       ASSISTANT_API: "https://YOUR-SAYMORE-BACKEND.example.com/webhook/assistant-request?web=1",
-      EXTRACT_NUGGETS_API: "https://YOUR-SAYMORE-BACKEND.example.com/extract-nuggets",
+      POSTS_API: "https://YOUR-SAYMORE-BACKEND.example.com/generate-posts",
     };
-    const { VAPI_PUBLIC_KEY, ASSISTANT_API, EXTRACT_NUGGETS_API } = CFG;
+    const { VAPI_PUBLIC_KEY, ASSISTANT_API, POSTS_API } = CFG;
 
     const HERO_STATUS_DEFAULT = "Live conversation right here in your browser";
 
     let vapi = null;
     let state = "idle";          // idle | connecting | active
     let transcript = [];         // [{ role, text }] captured live
-    let lastResult = null;       // last nugget report (for download)
+    let lastResult = null;       // last posts result (for download)
 
     const buttons    = document.querySelectorAll('[data-call-btn]');
     const heroStatus = document.querySelector('[data-call-status]');
     const workspace  = document.getElementById('workspace');
     const miningEl   = document.getElementById('mining');
     const resultsEl  = document.getElementById('results');
-    const cardsEl    = document.getElementById('nugget-cards');
-    const readLine   = document.getElementById('read-line');
+    const cardsEl    = document.getElementById('post-cards');
+    const menuEl     = document.getElementById('menu-line');
     const dlMd       = document.getElementById('download-md');
     const dlTxt      = document.getElementById('download-transcript');
 
@@ -520,7 +507,7 @@
       });
       vapi.on('call-end', () => {
         setState('idle');
-        if (transcript.length) mineNuggets();
+        if (transcript.length) generatePosts();
       });
       // Merge consecutive final chunks from the same speaker into one block.
       vapi.on('message', (msg) => {
@@ -560,15 +547,15 @@
 
     function endCall() { if (vapi) vapi.stop(); }
 
-    // ── Post-call: mine the transcript into nuggets ───────────────
-    async function mineNuggets() {
+    // ── Post-call: turn the transcript into posts ────────────────
+    async function generatePosts() {
       workspace.hidden = false;
       miningEl.hidden = false;
       resultsEl.hidden = true;
       workspace.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       try {
-        const res = await fetch(EXTRACT_NUGGETS_API, {
+        const res = await fetch(POSTS_API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript })
@@ -577,9 +564,9 @@
         if (!res.ok) throw new Error(data.error || ('Server returned ' + res.status));
         renderResults(data);
       } catch (err) {
-        console.error('extraction failed:', err);
-        readLine.textContent = '';
-        cardsEl.innerHTML = `<p class="thin">Couldn&rsquo;t pull the nuggets this time: ${err.message || err}.<br>Your transcript is still saved &mdash; try downloading it below.</p>`;
+        console.error('post generation failed:', err);
+        menuEl.textContent = '';
+        cardsEl.innerHTML = `<p class="thin">Couldn&rsquo;t write the posts this time: ${err.message || err}.<br>Your transcript is still saved &mdash; try downloading it below.</p>`;
       } finally {
         miningEl.hidden = true;
         resultsEl.hidden = false;
@@ -591,31 +578,62 @@
         ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
     }
 
+    function countWords(s) {
+      return String(s || '').trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    async function copyText(text, btn) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      if (btn) {
+        const old = btn.textContent;
+        btn.textContent = 'Copied ✓'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = old; btn.classList.remove('copied'); }, 1600);
+      }
+    }
+
     function renderResults(data) {
       lastResult = data;
-      const nuggets = Array.isArray(data.nuggets) ? data.nuggets : [];
-      readLine.textContent = data.read || (nuggets.length ? `Found ${nuggets.length} nugget${nuggets.length === 1 ? '' : 's'}.` : 'Nothing post-worthy this time.');
+      const posts = Array.isArray(data.posts) ? data.posts : [];
+      menuEl.textContent = data.menu || (posts.length ? `${posts.length} post${posts.length === 1 ? '' : 's'} ready.` : 'No story-worthy material this time.');
 
-      if (!nuggets.length) {
-        cardsEl.innerHTML = `<p class="thin">The transcript was a little thin this time. Try another pass &mdash; say more about a specific moment, a number, or a real opinion.</p>`;
+      if (!posts.length) {
+        cardsEl.innerHTML = `<p class="thin">Nothing post-worthy came out of that one. Try another pass &mdash; tell a specific story: a decision, a mistake, something that was hard or surprising, with a concrete detail or two.</p>`;
         return;
       }
 
-      cardsEl.innerHTML = nuggets.map((n, i) => {
-        const cat = ['Learning','Shout-out','Hot take','Story'].includes(n.category) ? n.category : 'Story';
-        const catClass = cat.replace(/[^a-zA-Z]/g, '-');
-        const quotes = (n.key_quotes || []).map(q => `<li>&ldquo;${esc(q)}&rdquo;</li>`).join('');
-        const specifics = n.specifics_present && n.specifics_present !== 'thin'
-          ? `<div class="specifics"><strong>Specifics to build with</strong>${esc(n.specifics_present)}</div>` : '';
+      cardsEl.innerHTML = posts.map((p, i) => {
+        const name = esc(p.name || ('Post ' + (i + 1)));
+        const wc = countWords(p.post);
+        const hook = p.hook ? `<div class="post-hook">${esc(p.hook)}</div>` : '';
+        const needs = (p.needs && p.needs.length)
+          ? `<div class="needs"><strong>Needs from you</strong>${p.needs.map(n => esc(n)).join('<br>')}</div>` : '';
         return `
-          <div class="nugget-card cat-${catClass}">
-            <span class="chip cat-${catClass}">${esc(cat)} · #${i + 1}</span>
-            <h4>${esc(n.hook)}</h4>
-            <p class="why"><strong>Why it works:</strong> ${esc(n.why_it_works)}</p>
-            ${quotes ? `<ul class="quotes">${quotes}</ul>` : ''}
-            ${specifics}
+          <div class="post-card">
+            <div class="post-head">
+              <h4>Post ${i + 1} &mdash; ${name}</h4>
+              <span class="wordcount">${wc} words</span>
+            </div>
+            ${hook}
+            <div class="post-body">${esc(p.post)}</div>
+            <div class="post-actions">
+              <button type="button" class="copy-btn" data-post-idx="${i}">Copy post</button>
+            </div>
+            ${needs}
           </div>`;
       }).join('');
+
+      cardsEl.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.postIdx);
+          copyText(posts[idx].post, btn);
+        });
+      });
     }
 
     // ── Downloads ─────────────────────────────────────────────────
@@ -635,30 +653,25 @@
       if (!lastResult) return;
       const d = new Date();
       const lines = [];
-      lines.push('# Saymore — Nugget Report');
+      lines.push('# Saymore — LinkedIn Posts');
       lines.push(d.toLocaleString());
       lines.push('='.repeat(48));
       lines.push('');
-      lines.push(`**The read:** ${lastResult.read || ''}`);
-      lines.push('');
-      (lastResult.nuggets || []).forEach((n, i) => {
-        lines.push(`## ${i + 1}. ${n.category} — ${n.hook}`);
+      if (lastResult.menu) { lines.push(`**Story menu:**`); lines.push(lastResult.menu); lines.push(''); }
+      (lastResult.posts || []).forEach((p, i) => {
+        lines.push(`## Post ${i + 1} — ${p.name || ''}`);
         lines.push('');
-        lines.push(`**Why it works:** ${n.why_it_works}`);
+        lines.push(p.post || '');
         lines.push('');
-        if (n.key_quotes && n.key_quotes.length) {
-          lines.push('**Key quotes (verbatim):**');
-          n.key_quotes.forEach(q => lines.push(`> ${q}`));
-          lines.push('');
-        }
-        if (n.specifics_present && n.specifics_present !== 'thin') {
-          lines.push(`**Specifics to build with:** ${n.specifics_present}`);
+        if (p.needs && p.needs.length) {
+          lines.push('**Needs from you:**');
+          p.needs.forEach(n => lines.push(`- ${n}`));
           lines.push('');
         }
         lines.push('---');
         lines.push('');
       });
-      triggerDownload(`saymore-nuggets-${stamp()}.md`, lines.join('\n'), 'text/markdown;charset=utf-8');
+      triggerDownload(`saymore-posts-${stamp()}.md`, lines.join('\n'), 'text/markdown;charset=utf-8');
     });
 
     dlTxt.addEventListener('click', () => {

@@ -31,8 +31,8 @@ const INTERVIEWER_PROMPT = fs.readFileSync(
   path.join(__dirname, 'interviewer-prompt.txt'),
   'utf8'
 );
-const EXTRACTOR_PROMPT = fs.readFileSync(
-  path.join(__dirname, 'nugget-extractor-prompt.txt'),
+const GHOSTWRITER_PROMPT = fs.readFileSync(
+  path.join(__dirname, 'ghostwriter-prompt.txt'),
   'utf8'
 );
 
@@ -109,16 +109,16 @@ app.post('/webhook/assistant-request', (req, res) => {
 });
 
 // ============================================================
-// 2) Nugget extraction — runs AFTER the call, over the transcript,
-//    via your GLM endpoint.
+// 2) Post generation — runs AFTER the call, over the transcript,
+//    via your GLM endpoint. Turns the interview into finished posts.
 // ============================================================
-async function callExtractor(transcriptText) {
+async function callGhostwriter(transcriptText) {
   const baseMessages = [
-    { role: 'system', content: EXTRACTOR_PROMPT },
+    { role: 'system', content: GHOSTWRITER_PROMPT },
     {
       role: 'user',
       content:
-        'Here is the raw interview transcript. Mine it for nuggets per the rules.\n\n' +
+        'Here is the raw interview transcript. Write the posts per the rules.\n\n' +
         '=== TRANSCRIPT ===\n' +
         transcriptText,
     },
@@ -151,11 +151,11 @@ async function callExtractor(transcriptText) {
   try {
     return JSON.parse(raw);
   } catch (e) {
-    return { read: 'The extractor returned unexpected output.', _raw: raw };
+    return { menu: 'The ghostwriter returned unexpected output.', _raw: raw };
   }
 }
 
-app.post('/extract-nuggets', async (req, res) => {
+app.post('/generate-posts', async (req, res) => {
   const transcript = req.body && req.body.transcript;
 
   if (!Array.isArray(transcript) || transcript.length === 0) {
@@ -178,17 +178,17 @@ app.post('/extract-nuggets', async (req, res) => {
     return res.status(400).json({ error: 'Transcript had no speakable lines.' });
   }
 
-  console.log(`⛏️  Extracting nuggets from ${transcript.length} lines via ${GLM_MODEL}…`);
+  console.log(`✍️  Writing posts from ${transcript.length} lines via ${GLM_MODEL}…`);
 
   try {
-    const parsed = await callExtractor(lines);
-    console.log(`✅ Extracted ${(parsed.nuggets || []).length} nugget(s).`);
+    const parsed = await callGhostwriter(lines);
+    console.log(`✅ Wrote ${(parsed.posts || []).length} post(s).`);
     return res.json(parsed);
   } catch (err) {
-    console.error('❌ Nugget extraction failed:', err);
+    console.error('❌ Post generation failed:', err);
     return res
       .status(500)
-      .json({ error: 'Nugget extraction failed.', detail: err.message });
+      .json({ error: 'Post generation failed.', detail: err.message });
   }
 });
 
@@ -216,7 +216,7 @@ app.get('/', (req, res) => {
   const config = `<script>window.__SAYMORE_CONFIG__=${JSON.stringify({
     VAPI_PUBLIC_KEY: VAPI_PUBLIC_KEY,
     ASSISTANT_API: `${origin}/webhook/assistant-request?web=1`,
-    EXTRACT_NUGGETS_API: `${origin}/extract-nuggets`,
+    POSTS_API: `${origin}/generate-posts`,
   })};</script>`;
   res.set('Cache-Control', 'no-store'); // never cache — config is injected per request
   res.type('html').send(html.replace('</head>', config + '</head>'));
@@ -237,14 +237,14 @@ code{background:#f3f3f3;padding:2px 6px;border-radius:4px}
 <body>
 <h1>Saymore</h1>
 <p class="ok">Server is running on port ${port}.</p>
-<p class="meta">Extractor: <strong>${GLM_MODEL}</strong> @ ${GLM_BASE_URL} — ${llm ? '<span class=ok>configured</span>' : '<span class=bad>set GLM_API_KEY in .env</span>'}</p>
+<p class="meta">Ghostwriter: <strong>${GLM_MODEL}</strong> @ ${GLM_BASE_URL} — ${llm ? '<span class=ok>configured</span>' : '<span class=bad>set GLM_API_KEY in .env</span>'}</p>
 <p class="meta">Live interviewer (Vapi): <strong>${VAPI_MODEL_PROVIDER}/${VAPI_MODEL}</strong></p>
 <p class="meta">Vapi public key: ${VAPI_PUBLIC_KEY ? '<span class=ok>set</span>' : '<span class=bad>set VAPI_PUBLIC_KEY in .env</span>'}</p>
 <h3>Endpoints</h3>
 <ul>
   <li><a href="/"><strong>GET /</strong></a> — the app (landing page + voice UI)</li>
   <li><code>POST /webhook/assistant-request</code> — interviewer config</li>
-  <li><code>POST /extract-nuggets</code> — runs the editor over a transcript via GLM</li>
+  <li><code>POST /generate-posts</code> — turns the transcript into finished posts via GLM</li>
   <li><a href="/healthz">GET /healthz</a> — health</li>
 </ul>
 <p class="meta">Helping you share your voice.</p>
@@ -262,11 +262,11 @@ app.listen(port, () => {
   console.log('\n🎙️  Saymore Server');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`📍 Server:        http://localhost:${port}`);
-  console.log(`⛏️  Extractor:     ${GLM_MODEL} @ ${GLM_BASE_URL}`);
+  console.log(`✍️  Ghostwriter:   ${GLM_MODEL} @ ${GLM_BASE_URL}`);
   console.log(`🗣️  Live (Vapi):   ${VAPI_MODEL_PROVIDER}/${VAPI_MODEL}`);
   console.log(`🔑 GLM:           ${llm ? 'configured' : '⚠️  NOT configured (set GLM_API_KEY in .env)'}`);
   console.log(`🎯 Assistant cfg: POST /webhook/assistant-request`);
-  console.log(`✨ Nuggets:       POST /extract-nuggets`);
+  console.log(`✨ Posts:         POST /generate-posts`);
   console.log(`❤️  Health:       GET /healthz`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 });
