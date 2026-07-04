@@ -161,6 +161,11 @@
       border-radius: 8px; padding: 10px 14px; }
     .needs strong { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
       color: #6b5316; display: block; margin-bottom: 4px; }
+    .alt-hook { margin-top: 12px; font-size: 14px; color: var(--ink-soft); background: var(--gold-soft); border: 1px solid var(--ink);
+      border-radius: 8px; padding: 10px 14px; }
+    .alt-hook strong { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--ink); display: block; margin-bottom: 4px; }
+    .alt-hook .alt-text { font-style: italic; display: block; margin-bottom: 8px; }
 
     .result-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; align-items: center; }
     .thin { text-align: center; color: var(--whisper); font-size: 16px; padding: 12px 0; }
@@ -608,15 +613,17 @@
       }
 
       cardsEl.innerHTML = posts.map((p, i) => {
-        const name = esc(p.name || ('Post ' + (i + 1)));
+        const name = esc(p.name || ('Story ' + (i + 1)));
         const wc = countWords(p.post);
         const hook = p.hook ? `<div class="post-hook">${esc(p.hook)}</div>` : '';
         const needs = (p.needs && p.needs.length)
           ? `<div class="needs"><strong>Needs from you</strong>${p.needs.map(n => esc(n)).join('<br>')}</div>` : '';
+        const alt = p.alternate_hook
+          ? `<div class="alt-hook"><strong>Alternate hook (swap-in)</strong><span class="alt-text">&ldquo;${esc(p.alternate_hook)}&rdquo;</span><button type="button" class="copy-btn" data-alt-idx="${i}">Copy hook</button></div>` : '';
         return `
           <div class="post-card">
             <div class="post-head">
-              <h4>Post ${i + 1} &mdash; ${name}</h4>
+              <h4>Story ${i + 1} &mdash; ${name}</h4>
               <span class="wordcount">${wc} words</span>
             </div>
             ${hook}
@@ -624,14 +631,19 @@
             <div class="post-actions">
               <button type="button" class="copy-btn" data-post-idx="${i}">Copy post</button>
             </div>
+            ${alt}
             ${needs}
           </div>`;
       }).join('');
 
       cardsEl.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.postIdx);
-          copyText(posts[idx].post, btn);
+          if (btn.dataset.postIdx != null) {
+            copyText(posts[Number(btn.dataset.postIdx)].post, btn);
+          } else if (btn.dataset.altIdx != null) {
+            const p = posts[Number(btn.dataset.altIdx)];
+            copyText(p.alternate_hook || '', btn);
+          }
         });
       });
     }
@@ -663,6 +675,10 @@
         lines.push('');
         lines.push(p.post || '');
         lines.push('');
+        if (i === 0 && p.alternate_hook) {
+          lines.push(`**Alternate hook (swap-in):** ${p.alternate_hook}`);
+          lines.push('');
+        }
         if (p.needs && p.needs.length) {
           lines.push('**Needs from you:**');
           p.needs.forEach(n => lines.push(`- ${n}`));

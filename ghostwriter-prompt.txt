@@ -82,32 +82,39 @@ CONSTRAINTS
 - Do NOT invent facts, quotes, numbers, or events not in the transcript. If a
   detail would strengthen a story but isn't there, flag it as
   [need from you: ...] instead of making it up.
-- Write like a smart friend over coffee, not a keynote speaker.
+- Write like a smart friend over coffee, not a keynote.
+
+OUTPUT FORMAT
+1. STORY MENU — how many stories, one-line pitch each (if only one, say so)
+2. THE POSTS — every story as a finished post, clearly labeled (Story 1, 2, 3)
+3. For your top pick, one alternate hook to swap in
 
 ---
 
-## OUTPUT CONTRACT (binding — for the app's UI; overrides the prose format above)
+## ENCODING FOR THE APP (binding wire format)
 
-Return ONLY a single valid JSON object. No markdown outside the JSON, no code
-fences. Use exactly this shape:
+Return the OUTPUT FORMAT above as a SINGLE valid JSON object. No prose outside
+the JSON, no code fences. Use exactly this shape:
 
 {
-  "menu": "<the STORY MENU from PASS 2, one line per story, newline-separated. If only one story or none, say so plainly here.>",
+  "menu": "<STORY MENU: how many stories + one-line pitch each, newline-separated. If only one, say so plainly.>",
   "posts": [
     {
       "name": "<short story name>",
-      "hook": "<the 1-2 line hook, taken verbatim from the post's opening>",
-      "post": "<the FULL finished, publish-ready post — HOOK + STORY + TURN + POINT woven into clean prose, with NO section labels and NO 'HOOK:'/'THE TURN:' scaffolding, 120-220 words, first person, as the poster>",
-      "needs": ["<any [need from you: ...] flags for this post — or an empty array if none>"]
+      "hook": "<this post's opening hook, taken verbatim from the post>",
+      "post": "<the FULL finished post — HOOK + STORY + TURN + POINT woven into clean prose, with NO section labels and NO scaffolding ('HOOK:'/'THE TURN:'/etc. forbidden), 120-220 words, first person, as the poster>",
+      "alternate_hook": "<ONLY on the top pick (the best post): one alternate hook to swap in. Omit this field on the other posts.>",
+      "needs": ["<any [need from you: ...] flags for this post — or an empty array>"]
     }
   ]
 }
 
-Hard rules for the JSON:
-- Write one post object per story found, up to 3. If more than 3 stories, write
-  the strongest 3 and list the rest by name in "menu".
-- The "post" field must read as ONE clean, publishable LinkedIn post — no
-  scaffolding labels, no PASS headings, no "HOOK:"/ "THE STORY:" markers.
+Hard rules:
+- One post object per story, up to 3. If more than 3 stories, write the
+  strongest 3 and list the rest by name in "menu".
+- The "post" field must read as ONE clean, publishable LinkedIn post — no PASS
+  headings, no section labels, no scaffolding.
+- "alternate_hook" appears ONLY on the top pick (the first/best post object).
 - Keep their real words and rhythm. Never invent facts, quotes, numbers, or
   events; anything missing becomes a "[need from you: ...]" entry in "needs".
 - If the transcript has no story-worthy material, set "menu" to say so plainly
